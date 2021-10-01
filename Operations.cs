@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.Json;
-
+using Microsoft.EntityFrameworkCore.SqlServer;
 using TaskTech.DbContextFolder;
 using TaskTech.Object;
+using System.Linq;
 
 namespace TaskTech
 {
@@ -13,12 +14,17 @@ namespace TaskTech
         private readonly DataContext _db;
         public void Init()
         {
-            var users = _db.Users;
-            _db.RemoveRange(users);
-            var attempts = _db.UserLoginAtempts;
-            _db.RemoveRange(attempts);
+            if(_db.Users.Count() != 0)
+            {
+                var users = _db.Users;
+                _db.RemoveRange(users);
+                var attempts = _db.UserLoginAtempts;
+                _db.RemoveRange(attempts);
+                _db.SaveChanges();
+            }
+            
 
-            _db.AddRange(users);
+            
         }
         public string GetByEmail(string email)
         {
@@ -34,19 +40,37 @@ namespace TaskTech
             List<User> users = new List<User>();
             for(int i = 0; i > 10; ++i)
             {
-                Person person = TakePerson();
-                users.Add(new User(Guid.NewGuid(),person.Email,person.Name,person.Surname,/*login attempts*/null));
+                var id = Guid.NewGuid();
+                Person person = GetPerson();
+                users.Add(new User(id,person.Email,person.Name,person.Surname,/*login attempts*/ null));
             }
             return users;
         }
-        private Person TakePerson()
+        private Guid GetGuid()
+        {
+            string file = System.IO.File.ReadAllText("DataForGenerator\\Guid.json");
+
+            var guids = JsonSerializer.Deserialize<List<Guid>>(file);
+
+            return guids[random.Next(0, 49)];
+
+        }
+        private Person GetPerson()
         {
             string file = System.IO.File.ReadAllText("DataForGenerator\\PersonV2.json");
 
             var people = JsonSerializer.Deserialize<List<Person>>(file);
-            Person person = people[random.Next(0, 60)];
 
-            return person;
+            return people[random.Next(0, 60)];
+        }
+
+        private List<UserLoginAtempt> GetLoginAttempts()
+        {
+            string file = System.IO.File.ReadAllText("DataForGenerator\\LogginAttempts.json");
+
+            var attempts = JsonSerializer.Deserialize<List<UserLoginAtempt>>(file);
+
+            return new List<UserLoginAtempt>();
         }
     }
 }
