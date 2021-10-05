@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.Json;
-using Microsoft.EntityFrameworkCore.SqlServer;
 using TaskTech.DbContextFolder;
 using TaskTech.Object;
 using System.Linq;
+using System.IO;
+using Microsoft.EntityFrameworkCore;
 
 namespace TaskTech
 {
     public class Operations
     {
-        Random random = new Random();
+        
         private readonly DataContext _db;
+
         public void Init()
         {
             if(_db.Users.Count() != 0)
@@ -22,18 +24,49 @@ namespace TaskTech
                 _db.RemoveRange(attempts);
                 _db.SaveChanges();
             }
-            
 
-            
+            _db.AddRange(UserGenertor());
+            _db.SaveChanges();
         }
+
         public string GetByEmail(string email)
         {
+            var users = _db.Users.Where(p => p.Email == email).Include(e => e.LoginAtempts).ToList();
+            //TODO: MAke Json generator for users
             return null;
         }
+
         public string Statistic(DateTime startDate, DateTime endDate,int metric,bool isSuccess)
         {
-
+            //TODO: Make Statistic querry
             return null;
+        }
+
+        public List<T>[] Partition<T>(List<T> list, int totalPartitions)
+        {
+            if (list == null)
+                throw new ArgumentNullException("list");
+
+            if (totalPartitions < 1)
+                throw new ArgumentOutOfRangeException("totalPartitions");
+
+            List<T>[] partitions = new List<T>[totalPartitions];
+
+            int maxSize = (int)Math.Ceiling(list.Count / (double)totalPartitions);
+            int k = 0;
+
+            for (int i = 0; i < partitions.Length; i++)
+            {
+                partitions[i] = new List<T>();
+                for (int j = k; j < k + maxSize; j++)
+                {
+                    if (j >= list.Count)
+                        break;
+                    partitions[i].Add(list[j]);
+                }
+                k += maxSize;
+            }
+            return partitions;
         }
 
         private List<User> UserGenertor(){
@@ -42,35 +75,36 @@ namespace TaskTech
             {
                 var id = Guid.NewGuid();
                 Person person = GetPerson();
-                users.Add(new User(id,person.Email,person.Name,person.Surname,/*login attempts*/ null));
+                users.Add(new User(id,person.Email,person.Name,person.Surname, GetLoginAttempts(id,i)));
             }
             return users;
         }
-        private Guid GetGuid()
-        {
-            string file = System.IO.File.ReadAllText("DataForGenerator\\Guid.json");
 
-            var guids = JsonSerializer.Deserialize<List<Guid>>(file);
-
-            return guids[random.Next(0, 49)];
-
-        }
         private Person GetPerson()
         {
-            string file = System.IO.File.ReadAllText("DataForGenerator\\PersonV2.json");
+            Random random = new Random();
+            string file = File.ReadAllText("DataForGenerator\\PersonV2.json");
 
             var people = JsonSerializer.Deserialize<List<Person>>(file);
 
-            return people[random.Next(0, 60)];
+            return people[random.Next(0, 59)];
         }
 
-        private List<UserLoginAtempt> GetLoginAttempts()
+        private List<UserLoginAtempt> GetLoginAttempts(Guid id,int index)
         {
-            string file = System.IO.File.ReadAllText("DataForGenerator\\LogginAttempts.json");
+            string file = File.ReadAllText("DataForGenerator\\LoginAttempts.json");
+           
+            var allAtempts = JsonSerializer.Deserialize<List<UserLoginAtempt>>(file);
 
-            var attempts = JsonSerializer.Deserialize<List<UserLoginAtempt>>(file);
+            var parts = Partition<UserLoginAtempt>(allAtempts, 10);
+            List<UserLoginAtempt> atempts = null;
+            atempts.AddRange(parts[index]);
+            foreach (var item in atempts)
+            {
+                item.Id = id;
+            }
 
-            return new List<UserLoginAtempt>();
-        }
+            return atempts;
+        }    
     }
 }

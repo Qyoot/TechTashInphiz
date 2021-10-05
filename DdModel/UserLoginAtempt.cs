@@ -8,8 +8,8 @@ namespace TaskTech.DbModel
         [Required]
         public Guid Id { get; set; }
         [Required]
-        public TimeSpan AttemptTime { get; set; }
+        public string AttemptTime { get; set; }
         [Required]
-        public Boolean IsSuccess { get; set; }
+        public bool IsSuccess { get; set; }
     }
 }

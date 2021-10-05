@@ -5,14 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="GeneratorData\Guid.json" />
     <Content Remove="GeneratorData\LoginAttempts.json" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="GeneratorData\Guid.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </EmbeddedResource>
     <EmbeddedResource Include="GeneratorData\LoginAttempts.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>

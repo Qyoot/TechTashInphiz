@@ -4,7 +4,7 @@ namespace TaskTech.Object
 {
     public class UserLoginAtempt
     {
-        public UserLoginAtempt(Guid id, TimeSpan attemptTime, bool isSuccess)
+        public UserLoginAtempt(Guid id, string attemptTime, bool isSuccess)
         {
             Id = id;
             AttemptTime = attemptTime;
@@ -13,7 +13,7 @@ namespace TaskTech.Object
 
         public Guid Id { get; set; }
 
-        public TimeSpan AttemptTime { get; set; }
+        public string AttemptTime { get; set; }
 
         public Boolean IsSuccess { get; set; }
     }
